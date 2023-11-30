@@ -7,6 +7,13 @@ import android.widget.ListView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,6 +24,36 @@ public class ListaActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_lista);
+
+        FirebaseApp.initializeApp(this); // Si aún no se inicializa automáticamente
+        // Obtén una referencia a tu base de datos
+        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("peliculas");
+
+        // Agrega datos a un nodo específico (por ejemplo, una película)
+        String peliculaNombre = "ID_UNICO_DE_PELICULA";
+        databaseReference.child(peliculaNombre).setValue("datos_de_la_pelicula");
+        // Obtén una referencia a tu base de datos
+        databaseReference = FirebaseDatabase.getInstance().getReference("peliculas");
+
+        // Agrega un listener para obtener datos en tiempo real
+        databaseReference.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                    // Obtiene los datos individuales de cada película
+                    String nombre = snapshot.child("nombre").getValue(String.class);
+                    String resena = snapshot.child("reseña").getValue(String.class);
+
+                    // Haz algo con los datos obtenidos, como imprimirlos en el log
+                    Log.d("Datos de Película", "Nombre: " + nombre + ", Reseña: " + resena);
+                }
+            }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Log.e("Error Firebase", "Error al leer datos", databaseError.toException());
+            }
+        });
+
 
         ListView listViewPeliculas = findViewById(R.id.LVlistaPeliculas);
 
@@ -35,13 +72,7 @@ public class ListaActivity extends AppCompatActivity {
                 String nombre = pelicula.getNombre();
                 String resena = pelicula.getResena();
 
-                // Verificar si el nombre o la reseña son nulos o vacíos
-                if (nombre != null && !nombre.isEmpty() && resena != null && !resena.isEmpty()) {
                     nombresResenas.add(nombre + " - " + resena);
-                } else {
-                    nombresResenas.add("Datos de película incompletos");
-                    // Otra opción: nombresResenas.add("Nombre: " + nombre + ", Reseña: " + reseña);
-                }
             }
 
             // Mostrar la lista de nombres y reseñas en un ListView
